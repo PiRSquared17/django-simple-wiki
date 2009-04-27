@@ -199,7 +199,8 @@ def search_add_related(request, wiki_url):
     if request.GET.__contains__('query'):
         search_string = request.GET['query']
         related = Article.objects.filter(title__istartswith = search_string)
-        related = related.exclude(related__in = article.related.all()).order_by('title')[:10]
+        if related:
+            related = related.exclude(related__in = article.related.all()).order_by('title')[:10]
         results = []
         for item in related:
             results.append({'id': str(item.id),
