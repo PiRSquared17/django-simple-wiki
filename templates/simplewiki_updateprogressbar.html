@@ -8,7 +8,7 @@
 {% if finished %}
 <script type="text/javascript">
 	parent.document.getElementById("wiki_attach_progress_container").style.display='none';
-	parent.location.href='{% url wiki_view wiki_article.geturl %}';
+	parent.location.href='{% url wiki_view wiki_article.get_url %}';
 </script>
 {% else %}
 {% if overwrite_warning %}
