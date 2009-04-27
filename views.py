@@ -198,14 +198,20 @@ def search_add_related(request, wiki_url):
 
     if request.GET.__contains__('query'):
         search_string = request.GET['query']
-        related = Article.objects.filter(title__istartswith = search_string)
-        if related:
-            related = related.exclude(related__in = article.related.all()).order_by('title')[:10]
         results = []
-        for item in related:
-            results.append({'id': str(item.id),
-                            'value': item.title,
-                            'info': item.get_url()})
+        try:
+            related = Article.objects.filter(title__istartswith = search_string)
+            others = article.related.all()
+            if others:
+                related = related.exclude(related__in = others)
+            related = related.order_by('title')[:10]
+            for item in related:
+                results.append({'id': str(item.id),
+                                'value': item.title,
+                                'info': item.get_url()})
+        # Todo.. figure out what's causing EmptyResultSet
+        except:
+            pass
     else:
         results = []
     
