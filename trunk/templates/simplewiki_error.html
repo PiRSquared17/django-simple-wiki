@@ -1,0 +1,12 @@
+{% extends "simplewiki_base.html" %}
+{% load i18n simplewiki_utils %}
+{% block wiki_page_title %}
+Oops...
+{% endblock %}
+
+{% block wiki_body %}
+<div>
+{{ wiki_error|safe }}
+</div>
+{% endblock %}
+

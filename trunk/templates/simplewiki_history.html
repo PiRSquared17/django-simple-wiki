@@ -1,0 +1,37 @@
+{% extends "simplewiki_base.html" %}
+{% load i18n simplewiki_utils %}
+{% block wiki_page_title %}
+	Revision history - {{ wiki_article.title }}
+{% endblock %}
+{% block wiki_body %}
+<form method="POST">
+<table id="wiki_history_table">
+<tr>
+<th colspan="2">Revision</th>
+<th>Comment</th>
+<th>Diff</th>
+<th>Modified</th>
+</tr>
+{% for revision in wiki_history %}
+	<tr style="border-top: 1px">
+		<td><input type="radio" name="revision" value="{{ revision.id }}"{%ifequal wiki_article.current_revision.id revision.id%} checked{%endifequal%} /></td>
+		<td>{{ revision }}</td>
+		<td>{% if revision.revision_text %}{{ revision.revision_text}}{% else %}<i>None</i>{% endif %}</td>
+		<td style="font-family: monospace;">{% for x in revision.get_diff %}{{x|escape}}<br />{% endfor %}</td>
+		<td>{{ revision.get_user}}, {{ revision.revision_date|date}} {{ revision.revision_date|time}}</td>
+	</tr>
+{% endfor %}
+<tr>
+	<td colspan="5">
+		{% if wiki_prev_page %}
+			<a href="{% url wiki_history wiki_article.get_url wiki_prev_page %}">{% trans "Previous page" %}</a>
+		{% endif %}
+		{% if wiki_next_page %}
+			<a href="{% url wiki_history wiki_article.get_url wiki_next_page %}">{% trans "Next page" %}</a>
+		{% endif %}
+	</td>
+</tr>
+</table>
+<input type="submit" value="Change revision"{% if not wiki_write %} disabled="true"{% endif %} />
+</form>
+{% endblock %}
