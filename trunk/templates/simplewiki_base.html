@@ -60,7 +60,7 @@
 		<span class="related">
 			{% if wiki_write %}
 				<a href="javascript:if(confirm('{% trans "Are you sure, you want to delete this relation?" %}')) { location.href='{% url wiki_remove_relation wiki_article.get_url rel.get_url%}'; }">
-					<img src="{{ "miniwiki/img/delete.gif"|prepend_media_url }}" alt="{% trans "remove relation" %}" />
+					<img src="{{ "simplewiki/img/delete.gif"|prepend_media_url }}" alt="{% trans "remove relation" %}" />
 				</a>
 			{% endif %}
 			<a href="{% url wiki_view rel.get_url %}">{{rel.title}}</a>
