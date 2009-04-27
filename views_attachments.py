@@ -74,7 +74,8 @@ def add_attachment(request, wiki_url):
                                  'wiki_article': article,})
                     t = loader.get_template('simplewiki_updateprogressbar.html')
                     yield t.render(c)
-                c = Context({'finished' : True,})
+                c = Context({'finished' : True,
+                             'wiki_article': article,})
                 t = loader.get_template('simplewiki_updateprogressbar.html')
                 destination.close()
                 attachment.save()
