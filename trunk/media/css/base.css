@@ -51,13 +51,55 @@ div#wiki_panel
 
 div.wiki_box
 {
-	width: 200px;
-	margin: 10px;
+	width: 230px;
 	padding: 10px;
-	background-color: #222;
 	color: #fff;
 	font-size: 80%;
 }
+
+div.wiki_box div.wiki_box_contents
+{	background-color: #222;
+	padding: 5px 10px;}
+
+div.wiki_box div.wiki_box_header,
+div.wiki_box div.wiki_box_footer
+{
+	position: relative;
+	height: 6px;
+	padding: 0 6px;
+	background-image: url(../img/box_corner_tr.gif);
+	background-position: top right;
+	background-repeat: no-repeat;
+	overflow: hidden;
+}
+div.wiki_box div.wiki_box_footer
+{
+	background-image: url(../img/box_corner_br.gif);
+}
+div.wiki_box div.wiki_box_header div.wiki_box_corner,
+div.wiki_box div.wiki_box_footer div.wiki_box_corner
+{
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 6px;
+	width: 6px;
+	background-image: url(../img/box_corner_tl.gif);
+	background-position: top left;
+	background-repeat: no-repeat;
+}
+div.wiki_box div.wiki_box_footer div.wiki_box_corner
+{
+	background-image: url(../img/box_corner_bl.gif);
+}
+div.wiki_box div.wiki_box_header div.wiki_box_bar,
+div.wiki_box div.wiki_box_footer div.wiki_box_bar
+{
+	height: 6px;
+	overflow: hidden;
+	background-color: #222;
+}
+
 
 div.wiki_box a
 {
@@ -73,7 +115,7 @@ div.wiki_box ul
 	margin-left: 0;
 }
 
-div.wiki_box div.wiki_box_header
+div.wiki_box div.wiki_box_title
 {
 	margin-bottom: 5px;
 	font-size: 140%;

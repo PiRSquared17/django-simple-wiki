@@ -266,7 +266,7 @@ def fetch_from_url(request, url):
         root = Article.get_root()
         path = Article.get_url_reverse(url_path, root)
         if not path:
-            err = not_found(request, '/'.join(url_path))
+            err = not_found(request, '/' + '/'.join(url_path))
         else:
             article = path[-1]
     except:
