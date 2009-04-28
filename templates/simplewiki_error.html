@@ -5,7 +5,7 @@ Oops...
 {% endblock %}
 
 {% block wiki_body %}
-<div>
+<div class="wiki_error">
 {{ wiki_error|safe }}
 
 {% if wiki_err_notfound %}
@@ -22,7 +22,7 @@ and your installation is working. Now you can create the root article.
 Click <a href="{% url wiki_create "" %}">here</a> to create it.
 </p>
 {% endif %}
-{% endif %}
+{% else %}
 
 {% if wiki_err_noparent %}
 <p>
@@ -30,37 +30,37 @@ You cannot create this page, because its parent
 does not exist. Click <a href="{% url wiki_create wiki_url_parent %}">here</a>
 to create it.
 </p>
-{% endif %}
+{% else %}
 
 {% if wiki_err_keyword %}
 <p>
 The page you're trying to create <b>{{wiki_url}}</b> starts with <b>_</b>, which is reserved for internal use.
 </p>
-{% endif %}
+{% else %}
 
 {% if wiki_err_locked %}
 <p>
 The article you are trying to modify is locked.
 </p>
-{% endif %}
+{% else %}
 
 {% if wiki_err_read %}
 <p>
 You do not have access to read this article.
 </p>
-{% endif %}
+{% else %}
 
 {% if wiki_err_edit %}
 <p>
 You do not have access to edit this article.
 </p>
-{% endif %}
+{% else %}
 
 {% if wiki_err_create %}
 <p>
 You do not have access to create this article.
 </p>
-{% endif %}
+{% else %}
 
 {% if wiki_err_encode %}
 <p>
@@ -69,6 +69,21 @@ Probably you used a bad character in the URL.
 Only use digits, English letters, underscore and dash. For instance
 /wiki/An_Article-1
 </p>
+
+
+{% else %}
+<p>
+An error has occured.
+</p>
+
+
+{% endif %}
+{% endif %}
+{% endif %}
+{% endif %}
+{% endif %}
+{% endif %}
+{% endif %}
 {% endif %}
 
 </div>

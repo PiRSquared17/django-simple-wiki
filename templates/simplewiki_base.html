@@ -40,6 +40,12 @@
 {% if wiki_article %}
 <div id="wiki_panel">
 <div class="wiki_box">
+	<div class="wiki_box_header">
+		<div class="wiki_box_corner"></div>
+		<div class="wiki_box_bar"></div>
+	</div>
+	<div class="wiki_box_contents">
+
 	<p>
 	<input type="button" onclick="javascript:location.href='{% url wiki_view wiki_article.get_url %}'" value="View" style="width: 100%;" /><br />
 	<input type="button" onclick="javascript:location.href='{% url wiki_edit wiki_article.get_url %}'" value="Edit" style="width: 100%;"{% if not wiki_write %} disabled="true"{%endif%} /><br />
@@ -51,9 +57,23 @@
 	<p>
 	<i>{% trans "Last modified" %}: {{ wiki_article.modified_on|date }}, {{ wiki_article.modified_on|time }}</i>
 	</p>
+
+	</div>
+	<div class="wiki_box_footer">
+		<div class="wiki_box_corner"></div>
+		<div class="wiki_box_bar"></div>
+	</div>
 </div>
+
+
 <div class="wiki_box">
-	<div class="wiki_box_header">{% trans "Related articles" %}</div>
+	<div class="wiki_box_header">
+		<div class="wiki_box_corner"></div>
+		<div class="wiki_box_bar"></div>
+	</div>
+	<div class="wiki_box_contents">
+
+	<div class="wiki_box_title">{% trans "Related articles" %}</div>
 {% if wiki_article.related.all %}
 	<p>
 		{% for rel in wiki_article.related.all %}
@@ -77,9 +97,22 @@
 	<input type="hidden" name="id" value="" id="wiki_related_input_id" />
 </form>
 {% endif %}
+
+	</div>
+	<div class="wiki_box_footer">
+		<div class="wiki_box_corner"></div>
+		<div class="wiki_box_bar"></div>
+	</div>
 </div>
+
 <div class="wiki_box">
-	<div class="wiki_box_header">{% trans "Attachments" %}</div>
+	<div class="wiki_box_header">
+		<div class="wiki_box_corner"></div>
+		<div class="wiki_box_bar"></div>
+	</div>
+	<div class="wiki_box_contents">
+
+	<div class="wiki_box_title">{% trans "Attachments" %}</div>
 	{% if wiki_article.attachments %}
 	<ul>
 		{% for a in wiki_article.attachments %}
@@ -91,7 +124,7 @@
 	{% endif %}
 {% if wiki_write %}
 	<form method="POST" action="{% url add_attachment wiki_article.get_url %}" enctype="multipart/form-data" target="wiki_attach_frame">
-		<input type="file" name="attachment" size="10" />
+		<input type="file" name="attachment" size="10" /><br />
 		<input type="checkbox" name="overwrite" id="wiki_attach_overwrite" value="1" /> Overwrite same filename
 		<p><input type="submit" value="Attach" /></p>
 		<div id="wiki_attach_progress_container">
@@ -100,7 +133,16 @@
 	</form>
 	<iframe name="wiki_attach_frame" style="display:none"></iframe>
 {% endif %}
+
+	</div>
+	<div class="wiki_box_footer">
+		<div class="wiki_box_corner"></div>
+		<div class="wiki_box_bar"></div>
+	</div>
 </div>
+
+
+
 </div>
 
 {% endif %}
