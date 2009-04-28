@@ -5,54 +5,48 @@ from django.utils import simplejson
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext, Context, loader
 from django.utils.translation import ugettext_lazy as _
+from django.core.urlresolvers import reverse
 
 from settings import *
 
 def view(request, wiki_url):
     
-    # Main page cannot be created, but is auto-populated
-    # on syncdb
-    try:
-        root = Article.get_root()
-    except:
-        return not_found(request, wiki_url)
-
-    url_path = get_url_path(wiki_url)
-
-    path = Article.get_url_reverse(url_path, root)
-    if not path:
-        return not_found(request, '/'.join(url_path))
-    article = path[-1]
-    
-    perm_err = check_permissions(request, article, check_read=True, errormsg=WIKI_ERR_NOREAD)
+    (article, path, err) = fetch_from_url(request, wiki_url)
+    if err:
+        return err
+        
+    perm_err = check_permissions(request, article, check_read=True)
     if perm_err:
         return perm_err
-    
-    return render_to_response('simplewiki_view.html',
-                              RequestContext(request, {'wiki_article': article,
-                                                       'wiki_write': article.can_write_l(request.user),
-                                                       'base': WIKI_BASE,} ) )
+    c = RequestContext(request, {'wiki_article': article,
+                                 'wiki_write': article.can_write_l(request.user),} ) 
+    return render_to_response('simplewiki_view.html', c)
 
 def create(request, wiki_url):
     
     url_path = get_url_path(wiki_url)
 
+    if url_path != [] and url_path[0].startswith('_'):
+            c = RequestContext(request, {'wiki_err_keyword': True,
+                                         'wiki_url': '/'.join(url_path) })
+            return render_to_response('simplewiki_error.html', c)        
+
     # Lookup path
-    import models
     try:
         # Ensure that the path exists...
         root = Article.get_root()
         path = Article.get_url_reverse(url_path[:-1], root)
         if not path:
-            # TODO: Should have a message that the parent does not exist
-            return not_found(request, wiki_url)
-        perm_err = check_permissions(request, path[-1], check_locked=False, check_write=True, errormsg=WIKI_ERR_NOCREATE)
+            c = RequestContext(request, {'wiki_err_noparent': True,
+                                         'wiki_url_parent': '/'.join(url_path[:-1]) })
+            return render_to_response('simplewiki_error.html', c)
+        perm_err = check_permissions(request, path[-1], check_locked=False, check_write=True)
         if perm_err:
             return perm_err
         # Ensure doesn't already exist
         article = Article.get_url_reverse(url_path, root)
         if article:
-            return HttpResponseRedirect(WIKI_BASE + article[-1].get_url())
+            reverse('wiki_view', args=(article[-1].get_url()))
     # TODO: Somehow this doesnt work... 
     #except ShouldHaveExactlyOneRootSlug, (e):
     except:
@@ -67,7 +61,7 @@ def create(request, wiki_url):
             article.slug = url_path[-1]
             if not request.user.is_anonymous():
                 article.created_by = request.user
-            article.title = f.cleaned_data['title']
+            article.title = f.cleaned_data.get('title')
             if path != []:
                 article.parent = path[-1]
             a = article.save()
@@ -77,7 +71,8 @@ def create(request, wiki_url):
             new_revision.article = article
             new_revision.save()
             import django.db as db
-            return HttpResponseRedirect(WIKI_BASE + article.get_url())
+            print article.get_url()
+            return HttpResponseRedirect(reverse('wiki_view', args=(article.get_url(),)))
     else:
         f = CreateArticleForm({'title':url_path[-1], 'contents':'Headline\n==='})
         
@@ -89,26 +84,14 @@ def create(request, wiki_url):
 
 def edit(request, wiki_url):
 
-    url_path = get_url_path(wiki_url)
-
-    # Lookup article
-    path = Article.get_url_reverse(url_path, Article.get_root())
-
-    if not path:
-        return not_found(request, '/'.join(url_path))
-
-    article = path[-1]
+    (article, path, err) = fetch_from_url(request, wiki_url)
+    if err:
+        return err
 
     # Check write permissions
-    perm_err = check_permissions(request, article, check_write=True, errormsg=WIKI_ERR_NOEDIT)
+    perm_err = check_permissions(request, article, check_write=True, check_locked=True)
     if perm_err:
         return perm_err
-
-    # Is locked?
-    if article.locked:
-        err_msg = WIKI_ERR_LOCKED % {'url' : '/'.join(url_path), 'base': WIKI_BASE}
-        return render_to_response('simplewiki_error.html',
-                                  RequestContext(request, {'wiki_error': err_msg}))
 
     if request.method == 'POST':
         f = RevisionForm(request.POST)
@@ -117,11 +100,11 @@ def edit(request, wiki_url):
             new_revision.article = article
             # Check that something has actually been changed...
             if new_revision.get_diff() == []:
-                return HttpResponseRedirect(WIKI_BASE + article.get_url())
+                return HttpResponseRedirect(reverse('wiki_view', args=(article.get_url(),)))
             if not request.user.is_anonymous():
                 new_revision.revision_user = request.user
             new_revision.save()
-            return HttpResponseRedirect(WIKI_BASE + article.get_url())
+            return HttpResponseRedirect(reverse('wiki_view', args=(article.get_url(),)))
     else:
         f = RevisionForm({'contents': article.current_revision.contents})
     c = RequestContext(request, {'wiki_form': f,
@@ -131,15 +114,12 @@ def edit(request, wiki_url):
     return render_to_response('simplewiki_edit.html', c)
 
 def history(request, wiki_url, page=1):
-    url_path = get_url_path(wiki_url)
-    # Lookup article
-    path = Article.get_url_reverse(url_path, Article.get_root())
-    if not path:
-        return not_found(request, '/'.join(url_path))
 
-    article = path[-1]
+    (article, path, err) = fetch_from_url(request, wiki_url)
+    if err:
+        return err
 
-    perm_err = check_permissions(request, article, check_read=True, errormsg=WIKI_ERR_NOEDIT)
+    perm_err = check_permissions(request, article, check_read=True)
     if perm_err:
         return perm_err
 
@@ -154,7 +134,7 @@ def history(request, wiki_url, page=1):
     
     if request.method == 'POST':
         if request.POST.__contains__('revision'):
-            perm_err = check_permissions(request, article, check_write=True, errormsg=WIKI_ERR_NOEDIT)
+            perm_err = check_permissions(request, article, check_write=True, check_locked=True)
             if perm_err:
                 return perm_err
             try:
@@ -164,7 +144,7 @@ def history(request, wiki_url, page=1):
             except:
                 pass
             finally:
-                return HttpResponseRedirect(article.get_abs_url())
+                return HttpResponseRedirect(reverse('wiki_view', args=(article.get_url(),)))
     
     page_count = (history.count()+(page_size-1)) / page_size
     if p > page_count:
@@ -184,15 +164,12 @@ def history(request, wiki_url, page=1):
     return render_to_response('simplewiki_history.html', c)
 
 def search_add_related(request, wiki_url):
-    url_path = get_url_path(wiki_url)
-    # Lookup article
-    path = Article.get_url_reverse(url_path, Article.get_root())
-    if not path:
-        return not_found(request, '/'.join(url_path))
 
-    article = path[-1]
+    (article, path, err) = fetch_from_url(request, wiki_url)
+    if err:
+        return err
 
-    perm_err = check_permissions(request, article, check_read=True, errormsg=WIKI_ERR_NOEDIT)
+    perm_err = check_permissions(request, article, check_read=True)
     if perm_err:
         return perm_err
 
@@ -219,15 +196,12 @@ def search_add_related(request, wiki_url):
     return HttpResponse(json, mimetype='application/json')
 
 def add_related(request, wiki_url):
-    url_path = get_url_path(wiki_url)
-    # Lookup article
-    path = Article.get_url_reverse(url_path, Article.get_root())
-    if not path:
-        return not_found(request, '/'.join(url_path))
 
-    article = path[-1]
+    (article, path, err) = fetch_from_url(request, wiki_url)
+    if err:
+        return err
     
-    perm_err = check_permissions(request, article, check_write=True, errormsg=WIKI_ERR_NOEDIT)
+    perm_err = check_permissions(request, article, check_write=True, check_locked=True)
     if perm_err:
         return perm_err
     
@@ -241,65 +215,76 @@ def add_related(request, wiki_url):
     except:
         pass
     finally:
-        return HttpResponseRedirect(WIKI_BASE + article.get_url())
+        return HttpResponseRedirect(reverse('wiki_view', args=(article.get_url(),)))
 
-def remove_related(request, wiki_url, remove_url):
-    url_path = get_url_path(wiki_url)
-    # Lookup article
-    path = Article.get_url_reverse(url_path, Article.get_root())
-    if not path:
-        return not_found(request, '/'.join(url_path))
+def remove_related(request, wiki_url, related_id):
 
-    # Lookup relation
-    rel_url_path = get_url_path(remove_url)
-    rel_path = Article.get_url_reverse(rel_url_path, Article.get_root())
-    if not rel_path:
-        return not_found(request, '/'.join(rel_url_path))
+    (article, path, err) = fetch_from_url(request, wiki_url)
+    if err:
+        return err
 
-    article = path[-1]
-    relation = rel_path[-1]
-
-    # Only require write permission on
-    # one of the articles... otherwise the whole thing
-    # explodes in complexity
-    perm_err = check_permissions(request, article, check_write=True, errormsg=WIKI_ERR_NOEDIT)
+    perm_err = check_permissions(request, article, check_write=True, check_locked=True)
     if perm_err:
         return perm_err
+
     try:
-        article.related.remove(relation)
+        rel_id = int(related_id)
+        rel = Article.objects.get(id=rel_id)
+        article.related.remove(rel)
         article.save()
     except:
         pass
     finally:
-        return HttpResponseRedirect(WIKI_BASE + article.get_url())
+        return HttpResponseRedirect(reverse('wiki_view', args=(article.get_url(),)))
 
 def encode_err(request, url):
-    err_msg = WIKI_ERR_ENCODE % {'url' : url, 'base': WIKI_BASE}
     return render_to_response('simplewiki_error.html',
-                              RequestContext(request, {'wiki_error': err_msg}))
+                              RequestContext(request, {'wiki_err_encode': True}))
     
 def not_found(request, wiki_url):
     """Generate a NOT FOUND message for some URL"""
-    err_msg = WIKI_ERR_NOTFOUND % {'url' : wiki_url, 'base': WIKI_BASE}
     return render_to_response('simplewiki_error.html',
-                              RequestContext(request, {'wiki_error': err_msg}))
+                              RequestContext(request, {'wiki_err_notfound': True,
+                                                       'wiki_url': wiki_url}))
 
 def get_url_path(url):
     """Return a list of all actual elements of a url, safely ignoring
     double-slashes (//) """
     return filter(lambda x: x!='', url.split('/'))
 
-def check_permissions(request, article, check_read=False, check_write=False, errormsg="Perm err", check_locked=True):
-    err = False
-    if check_read:
-        err = not article.can_read(request.user)
-    if check_write and check_locked:
-        err = err or not article.can_write_l(request.user)
-    if check_write and not check_locked:
-        err = err or not article.can_write(request.user)
-    if err:
-        return render_to_response('simplewiki_error.html',
-                                  RequestContext(request, {'wiki_error': errormsg}))
+def fetch_from_url(request, url):
+    """Analize URL, returning the article and the articles in its path
+    If something goes wrong, return an error HTTP response"""
+
+    err = None
+    article = None
+    path = None
+    
+    url_path = get_url_path(url)
+
+    try:
+        root = Article.get_root()
+        path = Article.get_url_reverse(url_path, root)
+        if not path:
+            err = not_found(request, '/'.join(url_path))
+        else:
+            article = path[-1]
+    except:
+        err = not_found(request, url_path)
+    finally:
+        return (article, path, err)
+
+
+def check_permissions(request, article, check_read=False, check_write=False, check_locked=False):
+    read_err = check_read and not article.can_read(request.user)
+    write_err = check_write and not article.can_write(request.user)
+    locked_err = check_locked and article.locked
+    if read_err or write_err or locked_err:
+        c = RequestContext(request, {'wiki_article': article,
+                                     'wiki_err_noread': read_err,
+                                     'wiki_err_nowrite': write_err,
+                                     'wiki_err_locked': locked_err})
+        return render_to_response('simplewiki_error.html', c)
     else:
         return None
 

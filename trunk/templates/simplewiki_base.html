@@ -59,7 +59,7 @@
 		{% for rel in wiki_article.related.all %}
 		<span class="related">
 			{% if wiki_write %}
-				<a href="javascript:if(confirm('{% trans "Are you sure, you want to delete this relation?" %}')) { location.href='{% url wiki_remove_relation wiki_article.get_url rel.get_url%}'; }">
+				<a href="javascript:if(confirm('{% trans "Are you sure, you want to delete this relation?" %}')) { location.href='{% url wiki_remove_relation wiki_article.get_url rel.id%}'; }">
 					<img src="{{ "simplewiki/img/delete.gif"|prepend_media_url }}" alt="{% trans "remove relation" %}" />
 				</a>
 			{% endif %}
@@ -107,7 +107,7 @@
 {% endblock %}
 
 {% block wiki_body %}
-An example!
+
 {% endblock %}
 
 </body>
