@@ -17,6 +17,9 @@ class AttachmentAdmin(admin.ModelAdmin):
 class ArticleAdminForm(forms.ModelForm):
     def clean(self):
         cleaned_data = self.cleaned_data
+        if cleaned_data.get("slug").startswith('_'):
+            raise forms.ValidationError(_('Slug cannot start with _ character.'
+                                          'Reserved for internal use.'))
         if not self.instance.pk:
             parent = cleaned_data.get("parent")
             slug = cleaned_data.get("slug")

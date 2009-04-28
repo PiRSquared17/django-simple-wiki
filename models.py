@@ -164,7 +164,7 @@ class Revision(models.Model):
         # Create pre-parsed contents - no need to parse on-the-fly
         self.contents_parsed = markdown(self.contents,
                                         extensions=['footnotes',
-                                                    "wikilinks(base_url=%s/)" % WIKI_BASE, 
+                                                    "wikilinks(base_url=%s/)" % reverse('wiki_view', args=('',)), 
                                                     'tables', 'headerid',
                                                     'fenced_code', 'def_list',
                                                     'codehilite', 'abbr','toc'],

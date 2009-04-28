@@ -3,20 +3,17 @@ from django.template import loader, Context
 from django.db.models.fields.files import FieldFile
 from django.core.servers.basehttp import FileWrapper
 from models import Article, ArticleAttachment, get_attachment_filepath
-from views import not_found, check_permissions, get_url_path
+from views import not_found, check_permissions, get_url_path, fetch_from_url
 import os
 from settings import *
 
 def add_attachment(request, wiki_url):
 
-    url_path = get_url_path(wiki_url)
-    path = Article.get_url_reverse(url_path, Article.get_root())
-    if not path:
-        return not_found(request, '/'.join(url_path))
-
-    article = path[-1]
+    (article, path, err) = fetch_from_url(request, wiki_url)
+    if err:
+        return err
     
-    perm_err = check_permissions(request, article, check_write=True, errormsg=WIKI_ERR_NOEDIT)
+    perm_err = check_permissions(request, article, check_write=True, check_locked=True)
     if perm_err:
         return perm_err
     
@@ -100,14 +97,11 @@ def send_file(request, filepath):
 
 def view_attachment(request, wiki_url, file_name):
     
-    url_path = get_url_path(wiki_url)
-    path = Article.get_url_reverse(url_path, Article.get_root())
-    if not path:
-        return not_found(request, '/'.join(url_path))
-
-    article = path[-1]
+    (article, path, err) = fetch_from_url(request, wiki_url)
+    if err:
+        return err
     
-    perm_err = check_permissions(request, article, check_read=True, errormsg=WIKI_ERR_NOEDIT)
+    perm_err = check_permissions(request, article, check_read=True)
     if perm_err:
         return perm_err
     
