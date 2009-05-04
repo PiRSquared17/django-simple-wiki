@@ -152,8 +152,14 @@ class Revision(models.Model):
     
     def save(self, **kwargs):
         # Check if contents have changed... if not, silently ignore save
-        if self.article and self.article.current_revision and self.article.current_revision.contents == self.contents:
-            return
+        if self.article and self.article.current_revision:
+            if self.article.current_revision.contents == self.contents:
+                return
+            else:
+                import datetime
+                self.article.modified_on = datetime.datetime.now()
+                self.article.save()
+        
         # Increment counter according to previous revision
         previous_revision = Revision.objects.filter(article__exact=self.article).order_by('-counter')
         if previous_revision:
