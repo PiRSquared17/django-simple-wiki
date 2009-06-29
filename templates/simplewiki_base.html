@@ -116,7 +116,7 @@
 	{% if wiki_article.attachments %}
 	<ul>
 		{% for a in wiki_article.attachments %}
-		<li><a href="{{a.download_url}}">{{a.filename}}</a> ({{a.file.size|filesizeformat}})</li>
+		<li><a href="{{a.download_url}}">{{a.filename}}</a> ({{a.get_size|filesizeformat}})</li>
 		{% endfor %}
 	</ul>
 	{% else %}
