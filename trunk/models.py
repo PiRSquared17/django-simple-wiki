@@ -132,6 +132,13 @@ class ArticleAttachment(models.Model):
     def filename(self):
         return '.'.join(self.file.name.split('/')[-1].split('.')[:-1])
     
+    def get_size(self):
+        try:
+            size = self.file.size
+        except OSError:
+            size = 0
+        return size
+
     def __unicode__(self):
         return self.filename()
     
