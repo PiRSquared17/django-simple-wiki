@@ -44,12 +44,24 @@
 		<div class="wiki_box_corner"></div>
 		<div class="wiki_box_bar"></div>
 	</div>
-	<div class="wiki_box_contents">
+	<div class="wiki_box_contents" style="position: relative;">
 
+	<div style="border: 2px outset #CCC; width: 250px; padding: 10px; background-color: #FFF; position: absolute; right: 100px; top: -80px; display: none; color: #000;" id="wiki_create_form">
+		<form method="GET" onsubmit="this.action='{% url wiki_view "" %}'+this.wiki_article_name.value.replace(/([^a-zA-Z0-9\-])/g, '')+'/_create/';">
+			<h2>{% trans "Create article" %}</h2>
+			<p><label for="id_wiki_article_name">{% trans "Title of article" %}</label>
+			<input type="text" name="wiki_article_name" id="id_wiki_article_name" /></p>
+			<p>
+				<input type="button" class="button" value="{% trans "Cancel" %}" style="display: inline-block; margin-right: 2px;" onclick="document.getElementById('wiki_create_form').style.display='none';" />
+				<input type="submit" class="button" value="{% trans "Next" %} &gt;" style="display: inline-block; margin-right: 2px; font-weight: bold;" />
+			</p>
+		</form>
+	</div>
 	<p>
 	<input type="button" onclick="javascript:location.href='{% url wiki_view wiki_article.get_url %}'" value="View" style="width: 100%;" /><br />
 	<input type="button" onclick="javascript:location.href='{% url wiki_edit wiki_article.get_url %}'" value="Edit" style="width: 100%;"{% if not wiki_write %} disabled="true"{%endif%} /><br />
 	<input type="button" onclick="javascript:location.href='{% url wiki_history wiki_article.get_url 1 %}'" value="History" style="width: 100%;" />
+	<input type="button" onclick="document.getElementById('wiki_create_form').style.display='block';" value="{% trans "Create article" %}" style="width: 100%; margin-bottom: 2px;" class="button" />
 	</p>
 	{% if wiki_article.locked %}
 	<p><strong>{% trans "This article has been locked" %}</strong></p>
