@@ -45,8 +45,8 @@ def create(request, wiki_url):
             return perm_err
         # Ensure doesn't already exist
         article = Article.get_url_reverse(url_path, root)
-        if article:
-            reverse('wiki_view', args=(article[-1].get_url()))
+        if article or len(path) == 1:
+            return HttpResponseRedirect(reverse('wiki_view', args=(article[-1].get_url(),)))
     # TODO: Somehow this doesnt work... 
     #except ShouldHaveExactlyOneRootSlug, (e):
     except:
@@ -71,10 +71,10 @@ def create(request, wiki_url):
             new_revision.article = article
             new_revision.save()
             import django.db as db
-            print article.get_url()
             return HttpResponseRedirect(reverse('wiki_view', args=(article.get_url(),)))
     else:
-        f = CreateArticleForm({'title':url_path[-1], 'contents':'Headline\n==='})
+        f = CreateArticleForm(initial={'title':request.GET.get('wiki_article_name', url_path[-1]),
+                                       'contents':_('Headline\n===')})
         
     c = RequestContext(request, {'wiki_form': f,
                                  'wiki_write': True,
