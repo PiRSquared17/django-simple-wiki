@@ -123,7 +123,7 @@ def get_attachment_filepath(instance, filename):
 class ArticleAttachment(models.Model):
     article = models.ForeignKey(Article, verbose_name=_('Article'))
     file = models.FileField(max_length=255, upload_to=get_attachment_filepath, verbose_name=_('Attachment'))
-    uploaded_by = models.ForeignKey(User, blank=True, verbose_name=_('Uploaded by'))
+    uploaded_by = models.ForeignKey(User, blank=True, verbose_name=_('Uploaded by'), null=True)
     uploaded_on = models.DateTimeField(auto_now_add = True, verbose_name=_('Upload date'))
     
     def download_url(self):

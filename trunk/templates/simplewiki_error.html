@@ -44,15 +44,21 @@ The article you are trying to modify is locked.
 </p>
 {% else %}
 
-{% if wiki_err_read %}
+{% if wiki_err_noread %}
 <p>
 You do not have access to read this article.
 </p>
 {% else %}
 
-{% if wiki_err_edit %}
+{% if wiki_err_nowrite %}
 <p>
 You do not have access to edit this article.
+</p>
+{% else %}
+
+{% if wiki_err_noanon %}
+<p>
+Anonymous attachments are not allowed. Try logging in.
 </p>
 {% else %}
 
@@ -77,6 +83,7 @@ An error has occured.
 </p>
 
 
+{% endif %}
 {% endif %}
 {% endif %}
 {% endif %}

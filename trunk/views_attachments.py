@@ -13,17 +13,17 @@ def add_attachment(request, wiki_url):
     if err:
         return err
     
-    perm_err = check_permissions(request, article, check_write=True, check_locked=True)
+    perm_err = check_permissions(request, article, check_write=True, check_locked=True, check_anon=True)
     if perm_err:
         return perm_err
     
     if request.method == 'POST':
-        if request.FILES.__contains__('attachment'):
-            
+        if request.FILES.__contains__('attachment'):            
             attachment = ArticleAttachment()
-            attachment.uploaded_by = request.user
+            if not request.user.is_anonymous:
+                attachment.uploaded_by = request.user
             attachment.article = article
-
+ 
             file = request.FILES['attachment']
             file_rel_path = get_attachment_filepath(attachment, file.name)
             chunk_size = request.upload_handlers[0].chunk_size
@@ -77,9 +77,9 @@ def add_attachment(request, wiki_url):
                 destination.close()
                 attachment.save()
                 yield t.render(c)
-    
+
             return HttpResponse(receive_file())
-    
+
     return HttpResponse('')
 
 # Taken from http://www.djangosnippets.org/snippets/365/
@@ -114,5 +114,5 @@ def view_attachment(request, wiki_url, file_name):
         filepath = WIKI_ATTACHMENTS_ROOT + attachment.file.name
         if os.path.exists(filepath):
             return send_file(request, filepath)
-    return not_found(request, '/'.join(url_path))
+    return not_found(request, '/'.join(url_path)) #FIXME: url_path undef.
     

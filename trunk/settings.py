@@ -16,6 +16,12 @@ WIKI_ATTACHMENTS_ROOT = settings.MEDIA_ROOT
 # Bytes! Default: 1 MB.
 WIKI_ATTACHMENTS_MAX = getattr(settings, 'SIMPLE_WIKI_ATTACHMENTS_MAX',
                                1 * 1024 * 1024)
+WIKI_ALLOW_ATTACHMENTS      = getattr(settings, 'WIKI_ALLOW_ATTACHMENTS', True)
+
+WIKI_ALLOW_ANON_ATTACHMENTS = getattr(settings, 'WIKI_ALLOW_ANON_ATTACHMENTS', False)
+WIKI_ALLOW_ANON_READ        = getattr(settings, 'WIKI_ALLOW_ANON_READ', True)
+WIKI_ALLOW_ANON_WRITE       = getattr(settings, 'WIKI_ALLOW_ANON_WRITE', True)
 
 # Planned feature.
 WIKI_USE_MARKUP_WIDGET = True
+
