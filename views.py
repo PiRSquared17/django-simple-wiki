@@ -275,17 +275,24 @@ def fetch_from_url(request, url):
         return (article, path, err)
 
 
-def check_permissions(request, article, check_read=False, check_write=False, check_locked=False):
+def check_permissions(request, article, check_read=False, check_write=False, check_locked=False, check_anon=False):
     read_err = check_read and not article.can_read(request.user)
     write_err = check_write and not article.can_write(request.user)
     locked_err = check_locked and article.locked
-    if read_err or write_err or locked_err:
+    # I'm still getting familiar with the project so this might not be the
+    # correct logic we want here - bryce
+    anon_err = check_anon and check_write and request.user.is_anonymous \
+               and not settings.WIKI_ALLOW_ANON_ATTACHMENTS
+
+    if read_err or write_err or locked_err or anon_err:
         c = RequestContext(request, {'wiki_article': article,
                                      'wiki_err_noread': read_err,
                                      'wiki_err_nowrite': write_err,
-                                     'wiki_err_locked': locked_err})
+                                     'wiki_err_locked': locked_err,
+                                     'wiki_err_noanon': anon_err})
+        # TODO: Make this a little less jarring by just displaying an error
+        #       on the current page? (no such redirect happens for an anon upload yet)
         return render_to_response('simplewiki_error.html', c)
     else:
         return None
 
-            
