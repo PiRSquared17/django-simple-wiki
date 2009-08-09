@@ -1,11 +1,15 @@
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader, Context
 from django.db.models.fields.files import FieldFile
 from django.core.servers.basehttp import FileWrapper
+from django.contrib.auth.decorators import login_required
+
+from settings import *
 from models import Article, ArticleAttachment, get_attachment_filepath
 from views import not_found, check_permissions, get_url_path, fetch_from_url
+
 import os
-from settings import *
+
 
 def add_attachment(request, wiki_url):
 
@@ -13,14 +17,17 @@ def add_attachment(request, wiki_url):
     if err:
         return err
     
-    perm_err = check_permissions(request, article, check_write=True, check_locked=True, check_anon=True)
+    perm_err = check_permissions(request, article, check_write=True, check_locked=True)
     if perm_err:
         return perm_err
     
+    if not WIKI_ALLOW_ATTACHMENTS:
+        return HttpResponseForbidden()
+
     if request.method == 'POST':
         if request.FILES.__contains__('attachment'):            
             attachment = ArticleAttachment()
-            if not request.user.is_anonymous:
+            if not request.user.is_anonymous():
                 attachment.uploaded_by = request.user
             attachment.article = article
  
@@ -48,6 +55,16 @@ def add_attachment(request, wiki_url):
                 t = loader.get_template('simplewiki_updateprogressbar.html')
                 return HttpResponse(t.render(c))
                 
+            def get_extension(fname):
+                return attachment.file.name.split('.')[-1]
+            if WIKI_ATTACHMENTS_ALLOWED_EXTENSIONS and not \
+               get_extension(attachment.file.name) in WIKI_ATTACHMENTS_ALLOWED_EXTENSIONS:
+                c = Context({'extension_err' : True,
+                             'extensions': WIKI_ATTACHMENTS_ALLOWED_EXTENSIONS,
+                             'wiki_article': article,
+                             'file': file})
+                t = loader.get_template('simplewiki_updateprogressbar.html')
+                return HttpResponse(t.render(c))
 
             # Remove existing attachments
             # TODO: Move this until AFTER having removed file.
@@ -116,3 +133,13 @@ def view_attachment(request, wiki_url, file_name):
             return send_file(request, filepath)
     return not_found(request, '/'.join(url_path)) #FIXME: url_path undef.
     
+
+####################
+# LOGIN PROTECTION #
+####################
+
+if WIKI_REQUIRE_LOGIN_VIEW:
+    view_attachment = login_required(view_attachment)
+    
+if WIKI_REQUIRE_LOGIN_EDIT or not WIKI_ALLOW_ANON_ATTACHMENTS:
+    add_attachment  = login_required(add_attachment)

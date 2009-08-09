@@ -15,7 +15,7 @@
 	var x = window.onload;
 	window.onload = function(){
 			var options = {
-			script: "{% url search_related wiki_article.get_url %}/?",
+			script: "{% url search_related wiki_article.get_url %}/?self={{wiki_article.pk }}&",
 			json: true,
 			varname: "query",
 			maxresults: 35,
