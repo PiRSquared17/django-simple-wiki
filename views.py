@@ -1,4 +1,4 @@
-# Create your views here.
+# -*- coding: utf-8 -*-
 from models import Article, Revision, RevisionForm, ShouldHaveExactlyOneRootSlug, CreateArticleForm
 from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError, HttpResponseForbidden, HttpResponseNotAllowed
 from django.utils import simplejson
@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext, Context, loader
 from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
+from django.contrib.auth.decorators import login_required
 
 from settings import *
 
@@ -40,16 +41,20 @@ def create(request, wiki_url):
             c = RequestContext(request, {'wiki_err_noparent': True,
                                          'wiki_url_parent': '/'.join(url_path[:-1]) })
             return render_to_response('simplewiki_error.html', c)
+        
         perm_err = check_permissions(request, path[-1], check_locked=False, check_write=True)
         if perm_err:
             return perm_err
         # Ensure doesn't already exist
         article = Article.get_url_reverse(url_path, root)
-        if article or len(path) == 1:
+        if article:
             return HttpResponseRedirect(reverse('wiki_view', args=(article[-1].get_url(),)))
-    # TODO: Somehow this doesnt work... 
-    #except ShouldHaveExactlyOneRootSlug, (e):
+    
+        # TODO: Somehow this doesnt work... 
+        #except ShouldHaveExactlyOneRootSlug, (e):
     except:
+        if Article.objects.filter(parent=None).count() > 0:
+            return HttpResponseRedirect(reverse('wiki_view', args=('',)))
         # Root not found...
         path = []
         url_path = [""]
@@ -173,22 +178,21 @@ def search_add_related(request, wiki_url):
     if perm_err:
         return perm_err
 
-    if request.GET.__contains__('query'):
-        search_string = request.GET['query']
+    search_string = request.GET.get('query', None)
+    self_pk = request.GET.get('self', None)
+    if search_string:
         results = []
-        try:
-            related = Article.objects.filter(title__istartswith = search_string)
-            others = article.related.all()
-            if others:
-                related = related.exclude(related__in = others)
-            related = related.order_by('title')[:10]
-            for item in related:
-                results.append({'id': str(item.id),
-                                'value': item.title,
-                                'info': item.get_url()})
-        # Todo.. figure out what's causing EmptyResultSet
-        except:
-            pass
+        related = Article.objects.filter(title__istartswith = search_string)
+        others = article.related.all()
+        if self_pk:
+            related = related.exclude(pk=self_pk)
+        if others:
+            related = related.exclude(related__in = others)
+        related = related.order_by('title')[:10]
+        for item in related:
+            results.append({'id': str(item.id),
+                            'value': item.title,
+                            'info': item.get_url()})
     else:
         results = []
     
@@ -253,7 +257,7 @@ def get_url_path(url):
     return filter(lambda x: x!='', url.split('/'))
 
 def fetch_from_url(request, url):
-    """Analize URL, returning the article and the articles in its path
+    """Analyze URL, returning the article and the articles in its path
     If something goes wrong, return an error HTTP response"""
 
     err = None
@@ -270,29 +274,41 @@ def fetch_from_url(request, url):
         else:
             article = path[-1]
     except:
-        err = not_found(request, url_path)
-    finally:
-        return (article, path, err)
+        err = not_found(request, '')
+    return (article, path, err)
 
 
-def check_permissions(request, article, check_read=False, check_write=False, check_locked=False, check_anon=False):
+def check_permissions(request, article, check_read=False, check_write=False, check_locked=False):
     read_err = check_read and not article.can_read(request.user)
     write_err = check_write and not article.can_write(request.user)
     locked_err = check_locked and article.locked
-    # I'm still getting familiar with the project so this might not be the
-    # correct logic we want here - bryce
-    anon_err = check_anon and check_write and request.user.is_anonymous \
-               and not settings.WIKI_ALLOW_ANON_ATTACHMENTS
 
-    if read_err or write_err or locked_err or anon_err:
+    if read_err or write_err or locked_err:
         c = RequestContext(request, {'wiki_article': article,
                                      'wiki_err_noread': read_err,
                                      'wiki_err_nowrite': write_err,
-                                     'wiki_err_locked': locked_err,
-                                     'wiki_err_noanon': anon_err})
+                                     'wiki_err_locked': locked_err,})
         # TODO: Make this a little less jarring by just displaying an error
         #       on the current page? (no such redirect happens for an anon upload yet)
+        # benjaoming: I think this is the nicest way of displaying an error, but
+        # these errors shouldn't occur, but rather be prevented on the other pages.
         return render_to_response('simplewiki_error.html', c)
     else:
         return None
 
+####################
+# LOGIN PROTECTION #
+####################
+
+if WIKI_REQUIRE_LOGIN_VIEW:
+    view            = login_required(view)
+    history         = login_required(history)
+    search_related  = login_required(search_related)
+    wiki_encode_err = login_required(wiki_encode_err)
+    
+if WIKI_REQUIRE_LOGIN_EDIT:
+    create          = login_required(create)
+    edit            = login_required(edit)
+    add_related     = login_required(add_related)
+    remove_related  = login_required(remove_related)
+    
