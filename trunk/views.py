@@ -213,7 +213,7 @@ def add_related(request, wiki_url):
         related_id = request.POST['id']
         rel = Article.objects.get(id=related_id)
         has_already = article.related.filter(id=related_id).count()
-        if has_already == 0:
+        if has_already == 0 and not rel == article:
             article.related.add(rel)
             article.save()
     except:
