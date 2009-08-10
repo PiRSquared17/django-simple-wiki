@@ -145,8 +145,10 @@ class ArticleAttachment(models.Model):
 class Revision(models.Model):
     
     article = models.ForeignKey(Article, verbose_name=_('Article'))
-    revision_text = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('Description of change'))
-    revision_user = models.ForeignKey(User, verbose_name=_('Modified by'), blank=True, null=True)
+    revision_text = models.CharField(max_length=255, blank=True, null=True, 
+                                     verbose_name=_('Description of change'))
+    revision_user = models.ForeignKey(User, verbose_name=_('Modified by'), 
+                                      blank=True, null=True, related_name='wiki_revision_user')
     revision_date = models.DateTimeField(auto_now_add = True, verbose_name=_('Revision date'))
     contents = models.TextField(verbose_name=_('Contents (Use MarkDown format)'))
     contents_parsed = models.TextField(editable=False, blank=True, null=True)
