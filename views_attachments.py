@@ -1,4 +1,4 @@
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, Http404
 from django.template import loader, Context
 from django.db.models.fields.files import FieldFile
 from django.core.servers.basehttp import FileWrapper
@@ -131,7 +131,8 @@ def view_attachment(request, wiki_url, file_name):
         filepath = WIKI_ATTACHMENTS_ROOT + attachment.file.name
         if os.path.exists(filepath):
             return send_file(request, filepath)
-    return not_found(request, '/'.join(url_path)) #FIXME: url_path undef.
+
+    raise Http404()
     
 
 ####################
