@@ -133,7 +133,6 @@ def view_attachment(request, wiki_url, file_name):
             return send_file(request, filepath)
 
     raise Http404()
-    
 
 ####################
 # LOGIN PROTECTION #

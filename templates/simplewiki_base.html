@@ -136,7 +136,7 @@
 	{% endif %}
 {% if wiki_write %}
 	<form method="POST" action="{% url add_attachment wiki_article.get_url %}" enctype="multipart/form-data" target="wiki_attach_frame">
-		<input type="file" name="attachment" size="10" /><br />
+		<input type="file" class="fileinput" name="attachment" size="10" /><br />
 		<input type="checkbox" name="overwrite" id="wiki_attach_overwrite" value="1" /> Overwrite same filename
 		<p><input type="submit" value="Attach" /></p>
 		<div id="wiki_attach_progress_container">
