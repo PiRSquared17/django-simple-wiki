@@ -153,8 +153,8 @@ class Revision(models.Model):
     contents = models.TextField(verbose_name=_('Contents (Use MarkDown format)'))
     contents_parsed = models.TextField(editable=False, blank=True, null=True)
     counter = models.IntegerField(verbose_name=_('Revision#'), default=1, editable=False)
-    previous_revision = models.OneToOneField('self', related_name='previous_rev',
-                                            blank=True, null=True, editable=False)
+    previous_revision = models.ForeignKey('self', related_name='previous_rev',
+                                           blank=True, null=True, editable=False)
     
     def get_user(self):
         return self.revision_user if self.revision_user else _('Anonymous')
@@ -176,6 +176,7 @@ class Revision(models.Model):
         else:
             self.counter = 1
         self.previous_revision = self.article.current_revision
+
         # Create pre-parsed contents - no need to parse on-the-fly
         self.contents_parsed = markdown(self.contents,
                                         extensions=['footnotes',
@@ -211,6 +212,8 @@ class Revision(models.Model):
             previous = self.previous_revision.contents.splitlines(1)
         else:
             previous = []
+        
+        # Todo: difflib.HtmlDiff would look pretty for our history pages!
         diff = difflib.ndiff(previous, self.contents.splitlines(1))
         for d in diff:
             yield d

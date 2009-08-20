@@ -56,4 +56,3 @@ WIKI_ATTACHMENTS_ROOT = settings.MEDIA_ROOT
 # Bytes! Default: 1 MB.
 WIKI_ATTACHMENTS_MAX = getattr(settings, 'SIMPLE_WIKI_ATTACHMENTS_MAX',
                                1 * 1024 * 1024)
-
