@@ -7,7 +7,7 @@ from django.template import RequestContext, Context, loader
 from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required
-
+from django.db.models import Q
 from settings import *
 
 def view(request, wiki_url):
@@ -67,6 +67,7 @@ def create(request, wiki_url):
             if not request.user.is_anonymous():
                 article.created_by = request.user
             article.title = f.cleaned_data.get('title')
+            print "path is " + str(path)
             if path != []:
                 article.parent = path[-1]
             a = article.save()
@@ -79,7 +80,7 @@ def create(request, wiki_url):
             return HttpResponseRedirect(reverse('wiki_view', args=(article.get_url(),)))
     else:
         f = CreateArticleForm(initial={'title':request.GET.get('wiki_article_name', url_path[-1]),
-                                       'contents':_('Headline\n===')})
+                                       'contents':_('Headline\n===\n\n')})
         
     c = RequestContext(request, {'wiki_form': f,
                                  'wiki_write': True,
@@ -168,6 +169,40 @@ def history(request, wiki_url, page=1):
 
     return render_to_response('simplewiki_history.html', c)
 
+def search_articles(request, wiki_url):
+    # blampe: We should check for the presence of other popular django search
+    # apps and use those if possible. Only fall back on this as a last resort.
+    # Adding some context to results (eg where matches were) would also be nice.
+    
+    # todo: maybe do some perm checking here
+    
+    if request.method == 'POST':
+        querystring = request.POST['value'].strip()
+        if querystring:
+            results = Article.objects.all()
+            for queryword in querystring.split():
+                # Basic negation is as fancy as we get right now
+                if queryword[0] == '-' and len(queryword) > 1:
+                    results._search = lambda x: results.exclude(x)
+                    queryword = queryword[1:]
+                else:
+                    results._search = lambda x: results.filter(x)
+                    
+                results = results._search(Q(current_revision__contents__icontains = queryword) | \
+                                          Q(title = queryword))
+        else:
+            # Need to throttle results by splitting them into pages...
+            results = Article.objects.all()
+
+        if results.count() == 1:
+            return HttpResponseRedirect(reverse('wiki_view', args=(results[0].get_url(),)))
+        else:        
+            c = RequestContext(request, {'wiki_search_results': results,
+                                         'wiki_search_query': querystring})
+            return render_to_response('simplewiki_searchresults.html', c)
+    
+    return view(request, wiki_url)
+
 def search_add_related(request, wiki_url):
 
     (article, path, err) = fetch_from_url(request, wiki_url)
@@ -240,6 +275,12 @@ def remove_related(request, wiki_url, related_id):
         pass
     finally:
         return HttpResponseRedirect(reverse('wiki_view', args=(article.get_url(),)))
+
+def random_article(request, wiki_url):
+    from random import randint
+    num_arts = Article.objects.count()
+    article = Article.objects.all()[randint(0, num_arts-1)]
+    return HttpResponseRedirect(reverse('wiki_view', args=(article.get_url(),)))
 
 def encode_err(request, url):
     return render_to_response('simplewiki_error.html',
