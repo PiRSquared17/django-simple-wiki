@@ -56,3 +56,11 @@ WIKI_ATTACHMENTS_ROOT = settings.MEDIA_ROOT
 # Bytes! Default: 1 MB.
 WIKI_ATTACHMENTS_MAX = getattr(settings, 'SIMPLE_WIKI_ATTACHMENTS_MAX',
                                1 * 1024 * 1024)
+                               
+####################
+# AESTHETICS       #
+####################
+
+# Planned features
+WIKI_PAGE_WIDTH = getattr(settings, 'SIMPLE_WIKI_PAGE_WIDTH', "100%")
+WIKI_PAGE_ALIGN = getattr(settings, 'SIMPLE_WIKI_PAGE_ALIGN', "center")
