@@ -8,10 +8,20 @@ a img
 	border: 0;
 }
 
+div#wiki_article a {
+    color: #06d;
+    text-decoration: none;
+}
+
+div#wiki_article a:hover {
+    color: #f82;
+    text-decoration: underline;
+}
+
 hr
 {
 	background-color: #def;
-	height: 1px;
+	height: 2px;
 	border: 0;
 }
 
@@ -22,8 +32,8 @@ div#wiki_article .toc a
 
 div#wiki_article p
 {
-	font-size: 90%;
-	line-height: 150%;
+	/* font-size: 90%; looks funny when combined with lists/tables */
+	line-height: 140%;
 }
 div#wiki_article h1
 {
@@ -44,6 +54,36 @@ div#wiki_article h3
 	font-size: 120%;
 	font-weight: bold;
 	color: #000;
+}
+
+table
+{
+    border: 1px solid black;
+    border-collapse: collapse;
+    margin: 12px;
+}
+
+table tr.dark
+{
+    background-color: #F3F3F3;
+}
+
+table thead tr 
+{
+    background-color: #def;
+    border-bottom: 2px solid black;
+}
+
+table td, th
+{
+    padding: 6px 10px 6px 10px;
+    border: 1px solid black;
+}
+
+table thead th
+{
+    padding-bottom: 8px;
+    padding-top: 8px;
 }
 
 div#wiki_panel
@@ -148,19 +188,27 @@ form#wiki_revision #id_revision_text
 
 table#wiki_revision_table
 {
+    border: none;
+    border-collapse: collapse;
 	padding-right: 250px;
 }
 
 table#wiki_revision_table th
 {
+    border: none;
 	text-align: left;
 	vertical-align: top;
 }
 
+table#wiki_revision_table td
+{
+    border: none;
+}
+
 table#wiki_history_table
 {
+    border-collapse: collapse;
     border-spacing: 0;
-    width: 100%;
 	padding-right: 250px;
 }
 
@@ -169,23 +217,38 @@ table#wiki_history_table th#modified
     width: 220px;
 }
 
-table#wiki_history_table tr.dark
+table#wiki_history_table td
 {
-    background-color: #F3F9FF;
+    border: none;
 }
 
+table#wiki_history_table tbody tr
+{
+    border-bottom: 1px solid black;
+}
 
-table#wiki_history_table td
+table#wiki_history_table tbody td
 {
 	vertical-align: top;
 	padding: 5px;
 }
 
+table#wiki_history_table tfoot td
+{
+    border: none;
+}
+
+table#wiki_history_table tbody td.diff
+{
+    font-family: monospace;
+    overflow: hidden;
+    border-left: 1px dotted black;
+    border-right: 1px dotted black;
+}
+
 table#wiki_history_table th
 {
 	text-align: left;
-	padding: 5px;
-	border-bottom: 1px solid black;
 }
 
 div#wiki_attach_progress_container
