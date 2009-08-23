@@ -67,7 +67,6 @@ def create(request, wiki_url):
             if not request.user.is_anonymous():
                 article.created_by = request.user
             article.title = f.cleaned_data.get('title')
-            print "path is " + str(path)
             if path != []:
                 article.parent = path[-1]
             a = article.save()
