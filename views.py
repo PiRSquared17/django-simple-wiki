@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+import types
+from django.core.urlresolvers import get_callable
 from models import Article, Revision, RevisionForm, ShouldHaveExactlyOneRootSlug, CreateArticleForm
 from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError, HttpResponseForbidden, HttpResponseNotAllowed
 from django.utils import simplejson
-from django.shortcuts import get_object_or_404, render_to_response
+from django.shortcuts import get_object_or_404, render_to_response 
 from django.template import RequestContext, Context, loader
 from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
@@ -21,7 +23,7 @@ def view(request, wiki_url):
         return perm_err
     c = RequestContext(request, {'wiki_article': article,
                                  'wiki_write': article.can_write_l(request.user),} ) 
-    return render_to_response('simplewiki_view.html', c)
+    return ('simplewiki_view.html', c)
 
 def create(request, wiki_url):
     
@@ -30,7 +32,7 @@ def create(request, wiki_url):
     if url_path != [] and url_path[0].startswith('_'):
             c = RequestContext(request, {'wiki_err_keyword': True,
                                          'wiki_url': '/'.join(url_path) })
-            return render_to_response('simplewiki_error.html', c)        
+            return ('simplewiki_error.html', c)        
 
     # Lookup path
     try:
@@ -40,7 +42,7 @@ def create(request, wiki_url):
         if not path:
             c = RequestContext(request, {'wiki_err_noparent': True,
                                          'wiki_url_parent': '/'.join(url_path[:-1]) })
-            return render_to_response('simplewiki_error.html', c)
+            return ('simplewiki_error.html', c)
         
         perm_err = check_permissions(request, path[-1], check_locked=False, check_write=True)
         if perm_err:
@@ -85,7 +87,7 @@ def create(request, wiki_url):
                                  'wiki_write': True,
                                  })
 
-    return render_to_response('simplewiki_create.html', c)
+    return ('simplewiki_create.html', c)
 
 def edit(request, wiki_url):
 
@@ -116,7 +118,7 @@ def edit(request, wiki_url):
                                  'wiki_write': True,
                                  'wiki_article': article})
 
-    return render_to_response('simplewiki_edit.html', c)
+    return ('simplewiki_edit.html', c)
 
 def history(request, wiki_url, page=1):
 
@@ -166,7 +168,7 @@ def history(request, wiki_url, page=1):
                                  'wiki_article': article,
                                  'wiki_history': history[beginItem:beginItem+page_size],})
 
-    return render_to_response('simplewiki_history.html', c)
+    return ('simplewiki_history.html', c)
 
 def search_articles(request, wiki_url):
     # blampe: We should check for the presence of other popular django search
@@ -198,7 +200,7 @@ def search_articles(request, wiki_url):
         else:        
             c = RequestContext(request, {'wiki_search_results': results,
                                          'wiki_search_query': querystring})
-            return render_to_response('simplewiki_searchresults.html', c)
+            return ('simplewiki_searchresults.html', c)
     
     return view(request, wiki_url)
 
@@ -282,12 +284,12 @@ def random_article(request, wiki_url):
     return HttpResponseRedirect(reverse('wiki_view', args=(article.get_url(),)))
 
 def encode_err(request, url):
-    return render_to_response('simplewiki_error.html',
+    return ('simplewiki_error.html',
                               RequestContext(request, {'wiki_err_encode': True}))
     
 def not_found(request, wiki_url):
     """Generate a NOT FOUND message for some URL"""
-    return render_to_response('simplewiki_error.html',
+    return ('simplewiki_error.html',
                               RequestContext(request, {'wiki_err_notfound': True,
                                                        'wiki_url': wiki_url}))
 
@@ -308,14 +310,15 @@ def fetch_from_url(request, url):
 
     try:
         root = Article.get_root()
-        path = Article.get_url_reverse(url_path, root)
-        if not path:
-            print url_path
-            err = not_found(request, '/' + '/'.join(url_path))
-        else:
-            article = path[-1]
     except:
         err = not_found(request, '')
+        return (article, path, err)
+
+    path = Article.get_url_reverse(url_path, root)
+    if not path:
+        err = not_found(request, '/' + '/'.join(url_path))
+    else:
+        article = path[-1]
     return (article, path, err)
 
 
@@ -333,7 +336,7 @@ def check_permissions(request, article, check_read=False, check_write=False, che
         #       on the current page? (no such redirect happens for an anon upload yet)
         # benjaoming: I think this is the nicest way of displaying an error, but
         # these errors shouldn't occur, but rather be prevented on the other pages.
-        return render_to_response('simplewiki_error.html', c)
+        return ('simplewiki_error.html', c)
     else:
         return None
 
@@ -352,4 +355,27 @@ if WIKI_REQUIRE_LOGIN_EDIT:
     edit            = login_required(edit)
     add_related     = login_required(add_related)
     remove_related  = login_required(remove_related)
+
+def add_context(meth, func):
+    def fn(request, wiki_url, *args, **kwargs):
+        print "HEJ"
+        (template, context) = meth(request, wiki_url, *args, **kwargs)
+        extra_context = func(request, wiki_url)
+        context.update(extra_context)
+        return render_to_response(template, context)
     
+    return fn
+
+if WIKI_CONTEXT_PREPROCESSORS:
+    for x in WIKI_CONTEXT_PREPROCESSORS:
+        if type(x) is types.StringType:
+            func = get_callable(x)
+        else:
+            func = x
+    create          = add_context(create, func)
+    view            = add_context(view, func)
+    edit            = add_context(edit, func)
+    add_related     = add_context(add_related, func)
+    remove_related  = add_context(remove_related, func)
+    
+            
