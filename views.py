@@ -358,7 +358,6 @@ if WIKI_REQUIRE_LOGIN_EDIT:
 
 def add_context(meth, func):
     def fn(request, wiki_url, *args, **kwargs):
-        print "HEJ"
         (template, context) = meth(request, wiki_url, *args, **kwargs)
         extra_context = func(request, wiki_url)
         context.update(extra_context)
