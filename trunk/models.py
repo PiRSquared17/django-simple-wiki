@@ -78,7 +78,7 @@ class Article(models.Model):
             a = Article.objects.get(parent__exact = article, slug__exact=str(path[0]))
             return cls.get_url_reverse(path[1:], a, return_list+[article])
         except Exception, e:
-            print article.id, path[0], e
+            #print article.id, path[0], e
             return None
     
     def can_read(self, user):

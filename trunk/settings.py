@@ -56,7 +56,13 @@ WIKI_ATTACHMENTS_ROOT = settings.MEDIA_ROOT
 # Bytes! Default: 1 MB.
 WIKI_ATTACHMENTS_MAX = getattr(settings, 'SIMPLE_WIKI_ATTACHMENTS_MAX',
                                1 * 1024 * 1024)
-                               
+
+# Global context processors -- should return a dictionary
+# This will be called as the last part of any function in simplewiki.views
+# A function receives (request, wiki_url)
+WIKI_CONTEXT_PREPROCESSORS = getattr(settings, 'SIMPLE_WIKI_CONTEXT_PREPROCESSORS',
+                                     ())
+
 ####################
 # AESTHETICS       #
 ####################
