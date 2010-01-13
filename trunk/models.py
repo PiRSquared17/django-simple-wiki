@@ -50,7 +50,7 @@ class Article(models.Model):
         except the very first time the wiki is loaded, in which
         case the user is prompted to create this article."""
         try:
-            return Article.objects.get(slug__exact = '', parent__exact = None)
+            return Article.objects.filter(parent__exact = None)[0]
         except:
             raise ShouldHaveExactlyOneRootSlug()
 

@@ -25,6 +25,24 @@ def view(request, wiki_url):
                                  'wiki_write': article.can_write_l(request.user),} ) 
     return ('simplewiki_view.html', c)
 
+def root_redirect(request):
+    """
+    Reason for redirecting:
+    The root article needs to to have a specific slug
+    in the URL, otherwise pattern matching in urls.py will get confused.
+    I've tried various methods to avoid this, but depending on Django/Python
+    versions, regexps have been greedy in two different ways.. so I just
+    skipped having problematic URLs like '/wiki/_edit' for editing the main page.
+    #benjaoming
+    """
+    try:
+        root = Article.get_root()
+    except:
+        err = not_found(request, 'mainpage')
+        return render_to_response(*err)
+
+    return HttpResponseRedirect(reverse('wiki_view', args=(root.slug,)))
+
 def create(request, wiki_url):
     
     url_path = get_url_path(wiki_url)
@@ -314,6 +332,9 @@ def fetch_from_url(request, url):
         err = not_found(request, '')
         return (article, path, err)
 
+    if root.slug == url_path[0]:
+        url_path = url_path[1:]
+
     path = Article.get_url_reverse(url_path, root)
     if not path:
         err = not_found(request, '/' + '/'.join(url_path))
@@ -374,7 +395,7 @@ if WIKI_CONTEXT_PREPROCESSORS:
     create          = add_context(create, func)
     view            = add_context(view, func)
     edit            = add_context(edit, func)
-    add_related     = add_context(add_related, func)
-    remove_related  = add_context(remove_related, func)
+    history         = add_context(history, func)
+    search_articles = add_context(search_articles, func)
     
             
