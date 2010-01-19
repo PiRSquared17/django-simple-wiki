@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import types
 from django.core.urlresolvers import get_callable
-from models import Article, Revision, RevisionForm, ShouldHaveExactlyOneRootSlug, CreateArticleForm
 from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError, HttpResponseForbidden, HttpResponseNotAllowed
 from django.utils import simplejson
 from django.shortcuts import get_object_or_404, render_to_response 
@@ -10,6 +9,9 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.conf import settings
+
+from models import *
 from settings import *
 
 def view(request, wiki_url):
@@ -23,7 +25,7 @@ def view(request, wiki_url):
         return perm_err
     c = RequestContext(request, {'wiki_article': article,
                                  'wiki_write': article.can_write_l(request.user),} ) 
-    return ('simplewiki_view.html', c)
+    return render_to_response('simplewiki_view.html', c)
 
 def root_redirect(request):
     """
@@ -39,7 +41,7 @@ def root_redirect(request):
         root = Article.get_root()
     except:
         err = not_found(request, 'mainpage')
-        return render_to_response(*err)
+        return err
 
     return HttpResponseRedirect(reverse('wiki_view', args=(root.slug,)))
 
@@ -50,17 +52,21 @@ def create(request, wiki_url):
     if url_path != [] and url_path[0].startswith('_'):
             c = RequestContext(request, {'wiki_err_keyword': True,
                                          'wiki_url': '/'.join(url_path) })
-            return ('simplewiki_error.html', c)        
+            return render_to_response('simplewiki_error.html', c)        
 
     # Lookup path
     try:
         # Ensure that the path exists...
         root = Article.get_root()
+        # Remove root slug if present in path
+        if root.slug == url_path[0]:
+            url_path = url_path[1:]
+        
         path = Article.get_url_reverse(url_path[:-1], root)
         if not path:
             c = RequestContext(request, {'wiki_err_noparent': True,
                                          'wiki_url_parent': '/'.join(url_path[:-1]) })
-            return ('simplewiki_error.html', c)
+            return render_to_response('simplewiki_error.html', c)
         
         perm_err = check_permissions(request, path[-1], check_locked=False, check_write=True)
         if perm_err:
@@ -105,7 +111,7 @@ def create(request, wiki_url):
                                  'wiki_write': True,
                                  })
 
-    return ('simplewiki_create.html', c)
+    return render_to_response('simplewiki_create.html', c)
 
 def edit(request, wiki_url):
 
@@ -118,25 +124,33 @@ def edit(request, wiki_url):
     if perm_err:
         return perm_err
 
+    if WIKI_ALLOW_TITLE_EDIT:
+        EditForm = RevisionFormWithTitle
+    else:
+        EditForm = RevisionForm
+    
     if request.method == 'POST':
-        f = RevisionForm(request.POST)
+        f = EditForm(request.POST)
         if f.is_valid():
             new_revision = f.save(commit=False)
             new_revision.article = article
             # Check that something has actually been changed...
             if new_revision.get_diff() == []:
-                return HttpResponseRedirect(reverse('wiki_view', args=(article.get_url(),)))
+                return (None, HttpResponseRedirect(reverse('wiki_view', args=(article.get_url(),))))
             if not request.user.is_anonymous():
                 new_revision.revision_user = request.user
             new_revision.save()
+            if WIKI_ALLOW_TITLE_EDIT:
+                new_revision.article.title = f.cleaned_data['title']
+                new_revision.article.save()
             return HttpResponseRedirect(reverse('wiki_view', args=(article.get_url(),)))
     else:
-        f = RevisionForm({'contents': article.current_revision.contents})
+        f = EditForm({'contents': article.current_revision.contents, 'title': article.title})
     c = RequestContext(request, {'wiki_form': f,
                                  'wiki_write': True,
                                  'wiki_article': article})
 
-    return ('simplewiki_edit.html', c)
+    return render_to_response('simplewiki_edit.html', c)
 
 def history(request, wiki_url, page=1):
 
@@ -186,7 +200,7 @@ def history(request, wiki_url, page=1):
                                  'wiki_article': article,
                                  'wiki_history': history[beginItem:beginItem+page_size],})
 
-    return ('simplewiki_history.html', c)
+    return render_to_response('simplewiki_history.html', c)
 
 def search_articles(request, wiki_url):
     # blampe: We should check for the presence of other popular django search
@@ -218,7 +232,7 @@ def search_articles(request, wiki_url):
         else:        
             c = RequestContext(request, {'wiki_search_results': results,
                                          'wiki_search_query': querystring})
-            return ('simplewiki_searchresults.html', c)
+            return render_to_response('simplewiki_searchresults.html', c)
     
     return view(request, wiki_url)
 
@@ -302,12 +316,12 @@ def random_article(request, wiki_url):
     return HttpResponseRedirect(reverse('wiki_view', args=(article.get_url(),)))
 
 def encode_err(request, url):
-    return ('simplewiki_error.html',
+    return render_to_response('simplewiki_error.html',
                               RequestContext(request, {'wiki_err_encode': True}))
     
 def not_found(request, wiki_url):
     """Generate a NOT FOUND message for some URL"""
-    return ('simplewiki_error.html',
+    return render_to_response('simplewiki_error.html',
                               RequestContext(request, {'wiki_err_notfound': True,
                                                        'wiki_url': wiki_url}))
 
@@ -357,7 +371,7 @@ def check_permissions(request, article, check_read=False, check_write=False, che
         #       on the current page? (no such redirect happens for an anon upload yet)
         # benjaoming: I think this is the nicest way of displaying an error, but
         # these errors shouldn't occur, but rather be prevented on the other pages.
-        return ('simplewiki_error.html', c)
+        return render_to_response('simplewiki_error.html', c)
     else:
         return None
 
@@ -377,25 +391,5 @@ if WIKI_REQUIRE_LOGIN_EDIT:
     add_related     = login_required(add_related)
     remove_related  = login_required(remove_related)
 
-def add_context(meth, func):
-    def fn(request, wiki_url, *args, **kwargs):
-        (template, context) = meth(request, wiki_url, *args, **kwargs)
-        extra_context = func(request, wiki_url)
-        context.update(extra_context)
-        return render_to_response(template, context)
-    
-    return fn
-
 if WIKI_CONTEXT_PREPROCESSORS:
-    for x in WIKI_CONTEXT_PREPROCESSORS:
-        if type(x) is types.StringType:
-            func = get_callable(x)
-        else:
-            func = x
-    create          = add_context(create, func)
-    view            = add_context(view, func)
-    edit            = add_context(edit, func)
-    history         = add_context(history, func)
-    search_articles = add_context(search_articles, func)
-    
-            
+    settings.TEMPLATE_CONTEXT_PROCESSORS = settings.TEMPLATE_CONTEXT_PROCESSORS + WIKI_CONTEXT_PREPROCESSORS
