@@ -57,9 +57,16 @@ WIKI_ATTACHMENTS_ROOT = settings.MEDIA_ROOT
 WIKI_ATTACHMENTS_MAX = getattr(settings, 'SIMPLE_WIKI_ATTACHMENTS_MAX',
                                1 * 1024 * 1024)
 
-# Global context processors -- should return a dictionary
-# This will be called as the last part of any function in simplewiki.views
-# A function receives (request, wiki_url)
+# Allow users to edit titles of pages
+# (warning! titles are not maintained in the revision system.)
+WIKI_ALLOW_TITLE_EDIT = getattr(settings, 'SIMPLE_WIKI_ALLOW_TITLE_EDIT',
+                                False)
+
+# Global context processors
+# These are appended to TEMPLATE_CONTEXT_PROCESSORS in your Django settings
+# whenever the wiki is in use. It can be used as a simple, but effective
+# way of extending simplewiki without touching original code (and thus keeping
+# everything easily maintainable)
 WIKI_CONTEXT_PREPROCESSORS = getattr(settings, 'SIMPLE_WIKI_CONTEXT_PREPROCESSORS',
                                      ())
 

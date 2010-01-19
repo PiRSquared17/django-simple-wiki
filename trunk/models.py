@@ -242,6 +242,11 @@ class RevisionForm(forms.ModelForm):
     class Meta:
         model = Revision
         fields = ['contents', 'revision_text']
+class RevisionFormWithTitle(forms.ModelForm):
+    title = forms.CharField(label=_('Title'))
+    class Meta:
+        model = Revision
+        fields = ['title', 'contents', 'revision_text']
 class CreateArticleForm(RevisionForm):
     title = forms.CharField(label=_('Title'))
     class Meta:
