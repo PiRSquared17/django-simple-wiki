@@ -48,12 +48,6 @@ WIKI_ALLOW_ANON_ATTACHMENTS = getattr(settings, 'SIMPLE_WIKI_ALLOW_ANON_ATTACHME
 WIKI_ATTACHMENTS_ALLOWED_EXTENSIONS = getattr(settings, 'SIMPLE_WIKI_ATTACHMENTS_ALLOWED_EXTENSIONS',
                                               None)
 
-# This is used for the editor to scan attachments - the once with a recognized image extension
-# are shown and can be inserted into the article
-WIKI_IMAGE_EXTENSIONS = getattr(settings, 'SIMPLE_WIKI_IMAGE_EXTENSIONS',
-                                ('jpeg','jpg','gif','png'))
-
-
 # At the moment this variable should not be modified, because
 # it breaks compatibility with the normal Django FileField and uploading
 # from the admin interface.
@@ -83,3 +77,7 @@ WIKI_CONTEXT_PREPROCESSORS = getattr(settings, 'SIMPLE_WIKI_CONTEXT_PREPROCESSOR
 # Planned features
 WIKI_PAGE_WIDTH = getattr(settings, 'SIMPLE_WIKI_PAGE_WIDTH', "100%")
 WIKI_PAGE_ALIGN = getattr(settings, 'SIMPLE_WIKI_PAGE_ALIGN', "center")
+
+WIKI_IMAGE_EXTENSIONS = ('jpg','jpeg','gif','png','tiff','bmp')
+WIKI_IMAGE_THUMB_SIZE = getattr(settings, 'SIMPLE_WIKI_IMAGE_THUMB_SIZE', (200,150))
+WIKI_IMAGE_THUMB_SIZE_SMALL = getattr(settings, 'WIKI_IMAGE_THUMB_SIZE_SMALL', (100,100))
