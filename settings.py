@@ -48,6 +48,12 @@ WIKI_ALLOW_ANON_ATTACHMENTS = getattr(settings, 'SIMPLE_WIKI_ALLOW_ANON_ATTACHME
 WIKI_ATTACHMENTS_ALLOWED_EXTENSIONS = getattr(settings, 'SIMPLE_WIKI_ATTACHMENTS_ALLOWED_EXTENSIONS',
                                               None)
 
+# This is used for the editor to scan attachments - the once with a recognized image extension
+# are shown and can be inserted into the article
+WIKI_IMAGE_EXTENSIONS = getattr(settings, 'SIMPLE_WIKI_IMAGE_EXTENSIONS',
+                                ('jpeg','jpg','gif','png'))
+
+
 # At the moment this variable should not be modified, because
 # it breaks compatibility with the normal Django FileField and uploading
 # from the admin interface.
