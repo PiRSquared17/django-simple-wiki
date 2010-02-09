@@ -231,7 +231,7 @@ class Revision(models.Model):
         # Increment counter according to previous revision
         previous_revision = Revision.objects.filter(article__exact=self.article).order_by('-counter')
         if previous_revision:
-            self.counter = previous_revision[0].counter + 1
+            self.counter = previous_revision.count() + 1
         else:
             self.counter = 1
         self.previous_revision = self.article.current_revision
