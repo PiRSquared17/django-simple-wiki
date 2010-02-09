@@ -138,11 +138,65 @@ class ArticleAttachment(models.Model):
             size = 0
         return size
 
+    def filename(self):
+        return '.'.join(self.file.name.split('/')[-1].split('.')[:-1])
+    
     def is_image(self):
-        fname = self.filename()
-        if fname and fname.split('.')[-1] in WIKI_IMAGE_EXTENSIONS:
+        fname = self.filename().split('.')
+        if len(fname) > 1 and fname[-1].lower() in WIKI_IMAGE_EXTENSIONS:
             return True
         return False
+    
+    def get_thumb(self):
+        return self.get_thumb_impl(*WIKI_IMAGE_THUMB_SIZE)
+
+    def get_thumb_small(self):
+        return self.get_thumb_impl(*WIKI_IMAGE_THUMB_SIZE_SMALL)
+
+    def mk_thumbs(self):
+        self.mk_thumb(*WIKI_IMAGE_THUMB_SIZE, **{'force':True})
+        self.mk_thumb(*WIKI_IMAGE_THUMB_SIZE_SMALL, **{'force':True})
+
+    def mk_thumb(self, width, height, force=False):
+        """Requires Python Imaging Library (PIL)"""
+        if not self.get_size():
+            return False
+        
+        if not self.is_image():
+            return False
+    
+        base_path = os.path.dirname(self.file.path)
+        orig_name = self.filename().split('.')
+        thumb_filename = "%s__thumb__%d_%d.%s" % ('.'.join(orig_name[:-1]), width, height, orig_name[-1])
+        thumb_filepath = "%s%s%s" % (base_path, os.sep, thumb_filename)
+    
+        if force or not os.path.exists(thumb_filepath):
+            try:
+                import Image
+                img = Image.open(self.file.path)            
+                img.thumbnail((width,height), Image.ANTIALIAS)
+                img.save(thumb_filepath)
+            except IOError:
+                return False
+
+        return True
+
+    def get_thumb_impl(self, width, height):
+        """Requires Python Imaging Library (PIL)"""
+        
+        if not self.get_size():
+            return False
+        
+        if not self.is_image():
+            return False
+    
+        self.mk_thumb(width, height)
+        
+        orig_name = self.filename().split('.')
+        thumb_filename = "%s__thumb__%d_%d.%s" % ('.'.join(orig_name[:-1]), width, height, orig_name[-1])
+        thumb_url = settings.MEDIA_URL + WIKI_ATTACHMENTS + self.article.get_url() +'/' + thumb_filename
+    
+        return thumb_url
 
     def __unicode__(self):
         return self.filename()
