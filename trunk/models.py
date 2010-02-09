@@ -138,6 +138,12 @@ class ArticleAttachment(models.Model):
             size = 0
         return size
 
+    def is_image(self):
+        fname = self.filename()
+        if fname and fname.split('.')[-1] in WIKI_IMAGE_EXTENSIONS:
+            return True
+        return False
+
     def __unicode__(self):
         return self.filename()
     
