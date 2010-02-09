@@ -212,8 +212,7 @@ class Revision(models.Model):
     contents = models.TextField(verbose_name=_('Contents (Use MarkDown format)'))
     contents_parsed = models.TextField(editable=False, blank=True, null=True)
     counter = models.IntegerField(verbose_name=_('Revision#'), default=1, editable=False)
-    previous_revision = models.ForeignKey('self', related_name='previous_rev',
-                                           blank=True, null=True, editable=False)
+    previous_revision = models.ForeignKey('self', blank=True, null=True, editable=False)
     
     def get_user(self):
         return self.revision_user if self.revision_user else _('Anonymous')
@@ -229,9 +228,12 @@ class Revision(models.Model):
                 self.article.save()
         
         # Increment counter according to previous revision
-        previous_revision = Revision.objects.filter(article__exact=self.article).order_by('-counter')
-        if previous_revision:
-            self.counter = previous_revision.count() + 1
+        previous_revision = Revision.objects.filter(article=self.article).order_by('-counter')
+        if previous_revision.count() > 0:
+            if previous_revision.count() > previous_revision[0].counter:
+                self.counter = previous_revision.count() + 1
+            else:
+                self.counter = previous_revision[0].counter + 1
         else:
             self.counter = 1
         self.previous_revision = self.article.current_revision
@@ -281,7 +283,6 @@ class Revision(models.Model):
         return "r%d" % self.counter
 
     class Meta:
-        unique_together = (('article', 'counter'),)
         verbose_name = _('article revision')
         verbose_name_plural = _('article revisions')
 
