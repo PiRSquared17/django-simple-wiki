@@ -67,6 +67,10 @@ class Article(models.Model):
         # TODO: Remove and create a reverse() lookup.
         return WIKI_BASE + self.get_url()
 
+    @models.permalink
+    def get_absolute_url(self):
+        return ('wiki_view', [self.get_url()])
+
     @classmethod
     def get_url_reverse(cls, path, article, return_list=[]):
         """Lookup a URL and return the corresponding set of articles
