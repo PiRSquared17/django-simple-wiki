@@ -248,7 +248,7 @@ class Revision(models.Model):
                                                     "wikilinks(base_url=%s/)" % reverse('wiki_view', args=('',)), 
                                                     'tables', 'headerid',
                                                     'fenced_code', 'def_list',
-                                                    'codehilite', 'abbr','toc'],
+                                                    'codehilite', 'abbr','toc', 'video'],
                                         safe_mode='escape',)
         super(Revision, self).save(**kwargs)
         
