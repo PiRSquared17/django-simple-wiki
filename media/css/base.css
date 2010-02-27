@@ -264,3 +264,18 @@ div#wiki_attach_progress
 	width: 25%;
 	background-color: #999;
 }
+
+blockquote {
+  margin-top: 15px;
+  margin-bottom: 15px;
+  margin-left: 50px;
+  padding-left: 15px;
+  border-left: 3px solid #666;
+  color: #999;
+  max-width: 400px ;
+}
+
+blockquote p {
+    margin-top: 8px;
+    margin-bottom: 8px;
+}

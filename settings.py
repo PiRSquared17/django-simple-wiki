@@ -59,8 +59,7 @@ WIKI_ATTACHMENTS_MAX = getattr(settings, 'SIMPLE_WIKI_ATTACHMENTS_MAX',
 
 # Allow users to edit titles of pages
 # (warning! titles are not maintained in the revision system.)
-WIKI_ALLOW_TITLE_EDIT = getattr(settings, 'SIMPLE_WIKI_ALLOW_TITLE_EDIT',
-                                False)
+WIKI_ALLOW_TITLE_EDIT = getattr(settings, 'SIMPLE_WIKI_ALLOW_TITLE_EDIT', False)
 
 # Global context processors
 # These are appended to TEMPLATE_CONTEXT_PROCESSORS in your Django settings
@@ -74,10 +73,39 @@ WIKI_CONTEXT_PREPROCESSORS = getattr(settings, 'SIMPLE_WIKI_CONTEXT_PREPROCESSOR
 # AESTHETICS       #
 ####################
 
-# Planned features
-WIKI_PAGE_WIDTH = getattr(settings, 'SIMPLE_WIKI_PAGE_WIDTH', "100%")
-WIKI_PAGE_ALIGN = getattr(settings, 'SIMPLE_WIKI_PAGE_ALIGN', "center")
+# List of extensions to be used by Markdown. Custom extensions (i.e., with file
+# names of mdx_*.py) can be dropped into the simplewiki (or project) directory
+# and then added to this list to be utilized. Wikilinks is always enabled.
+#
+# For more information, see
+# http://www.freewisdom.org/projects/python-markdown/Available_Extensions
+WIKI_MARKDOWN_EXTENSIONS = getattr(settings, 'SIMPLE_WIKI_MARKDOWN_EXTENSIONS',
+                           ['footnotes',
+                            'tables',
+                            'headerid',
+                            'fenced_code',
+                            'def_list',
+                            'codehilite',
+                            'abbr',
+                            'toc',
+                            #'camelcase', # CamelCase-style wikilinks
+                            'video',      # In-line embedding for YouTube, etc.
+                            'image'       # In-line embedding for images
+                            ])
 
-WIKI_IMAGE_EXTENSIONS = ('jpg','jpeg','gif','png','tiff','bmp')
-WIKI_IMAGE_THUMB_SIZE = getattr(settings, 'SIMPLE_WIKI_IMAGE_THUMB_SIZE', (200,150))
-WIKI_IMAGE_THUMB_SIZE_SMALL = getattr(settings, 'WIKI_IMAGE_THUMB_SIZE_SMALL', (100,100))
+
+WIKI_IMAGE_EXTENSIONS       = getattr(settings, 
+                                'SIMPLE_WIKI_IMAGE_EXTENSIONS',
+                                ('jpg','jpeg','gif','png','tiff','bmp'))
+# Planned features
+WIKI_PAGE_WIDTH             = getattr(settings, 
+                                'SIMPLE_WIKI_PAGE_WIDTH', "100%")
+                                
+WIKI_PAGE_ALIGN             = getattr(settings, 
+                                'SIMPLE_WIKI_PAGE_ALIGN', "center")
+                                
+WIKI_IMAGE_THUMB_SIZE       = getattr(settings, 
+                                'SIMPLE_WIKI_IMAGE_THUMB_SIZE', (200,150))
+                                
+WIKI_IMAGE_THUMB_SIZE_SMALL = getattr(settings, 
+                                'SIMPLE_WIKI_IMAGE_THUMB_SIZE_SMALL', (100,100))
