@@ -59,7 +59,7 @@ def create(request, wiki_url):
         # Ensure that the path exists...
         root = Article.get_root()
         # Remove root slug if present in path
-        if root.slug == url_path[0]:
+        if url_path and root.slug == url_path[0]:
             url_path = url_path[1:]
         
         path = Article.get_url_reverse(url_path[:-1], root)
@@ -135,7 +135,7 @@ def edit(request, wiki_url):
             new_revision = f.save(commit=False)
             new_revision.article = article
             # Check that something has actually been changed...
-            if new_revision.get_diff() == []:
+            if not new_revision.get_diff():
                 return (None, HttpResponseRedirect(reverse('wiki_view', args=(article.get_url(),))))
             if not request.user.is_anonymous():
                 new_revision.revision_user = request.user
@@ -346,7 +346,7 @@ def fetch_from_url(request, url):
         err = not_found(request, '')
         return (article, path, err)
 
-    if root.slug == url_path[0]:
+    if url_path and root.slug == url_path[0]:
         url_path = url_path[1:]
 
     path = Article.get_url_reverse(url_path, root)

@@ -72,7 +72,7 @@ def add_attachment(request, wiki_url):
             # automatically deletes files
             for a in article.attachments():
                 if file_rel_path == a.file.name:
-                    print file_rel_path
+#                    print file_rel_path
                     a.delete()
             def receive_file():
                 destination = open(file_path, 'wb+')

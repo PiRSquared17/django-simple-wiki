@@ -243,12 +243,10 @@ class Revision(models.Model):
         self.previous_revision = self.article.current_revision
 
         # Create pre-parsed contents - no need to parse on-the-fly
+        ext = WIKI_MARKDOWN_EXTENSIONS
+        ext += ["wikilinks(base_url=%s/)" % reverse('wiki_view', args=('',))]
         self.contents_parsed = markdown(self.contents,
-                                        extensions=['footnotes',
-                                                    "wikilinks(base_url=%s/)" % reverse('wiki_view', args=('',)), 
-                                                    'tables', 'headerid',
-                                                    'fenced_code', 'def_list',
-                                                    'codehilite', 'abbr','toc', 'video'],
+                                        extensions=ext,
                                         safe_mode='escape',)
         super(Revision, self).save(**kwargs)
         
@@ -279,7 +277,10 @@ class Revision(models.Model):
             previous = []
         
         # Todo: difflib.HtmlDiff would look pretty for our history pages!
-        diff = difflib.ndiff(previous, self.contents.splitlines(1))
+        diff = difflib.unified_diff(previous, self.contents.splitlines(1))
+        # let's skip the preamble
+        diff.next(); diff.next(); diff.next()
+        
         for d in diff:
             yield d
     
