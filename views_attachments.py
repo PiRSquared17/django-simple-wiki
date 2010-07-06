@@ -56,9 +56,10 @@ def add_attachment(request, wiki_url):
                 return HttpResponse(t.render(c))
                 
             def get_extension(fname):
-                return attachment.file.name.split('.')[-1]
+                return attachment.file.name.split('.')[-2]
             if WIKI_ATTACHMENTS_ALLOWED_EXTENSIONS and not \
                get_extension(attachment.file.name) in WIKI_ATTACHMENTS_ALLOWED_EXTENSIONS:
+                print get_extension(attachment.file.name)
                 c = Context({'extension_err' : True,
                              'extensions': WIKI_ATTACHMENTS_ALLOWED_EXTENSIONS,
                              'wiki_article': article,
