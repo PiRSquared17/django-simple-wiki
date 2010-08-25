@@ -88,9 +88,9 @@ WIKI_MARKDOWN_EXTENSIONS = getattr(settings, 'SIMPLE_WIKI_MARKDOWN_EXTENSIONS',
                             'codehilite',
                             'abbr',
                             'toc',
-                            #'camelcase', # CamelCase-style wikilinks
+                            'camelcase', # CamelCase-style wikilinks
                             'video',      # In-line embedding for YouTube, etc.
-                            'image'       # In-line embedding for images
+                            #'image'       # In-line embedding for images - too many bugs. It has a failed REG EXP.
                             ])
 
 

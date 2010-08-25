@@ -24,7 +24,9 @@ def view(request, wiki_url):
     if perm_err:
         return perm_err
     c = RequestContext(request, {'wiki_article': article,
-                                 'wiki_write': article.can_write_l(request.user),} ) 
+                                 'wiki_write': article.can_write_l(request.user),
+                                 'wiki_attachments_write': article.can_attach(request.user),
+                                 } ) 
     return render_to_response('simplewiki_view.html', c)
 
 def root_redirect(request):
@@ -148,7 +150,9 @@ def edit(request, wiki_url):
         f = EditForm({'contents': article.current_revision.contents, 'title': article.title})
     c = RequestContext(request, {'wiki_form': f,
                                  'wiki_write': True,
-                                 'wiki_article': article})
+                                 'wiki_article': article,
+                                 'wiki_attachments_write': article.can_attach(request.user),
+                                 })
 
     return render_to_response('simplewiki_edit.html', c)
 
@@ -197,6 +201,7 @@ def history(request, wiki_url, page=1):
                                  'wiki_next_page': next_page,
                                  'wiki_prev_page': prev_page,
                                  'wiki_write': article.can_write_l(request.user),
+                                 'wiki_attachments_write': article.can_attach(request.user),
                                  'wiki_article': article,
                                  'wiki_history': history[beginItem:beginItem+page_size],})
 
