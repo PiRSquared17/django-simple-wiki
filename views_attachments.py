@@ -9,6 +9,7 @@ from models import Article, ArticleAttachment, get_attachment_filepath
 from views import not_found, check_permissions, get_url_path, fetch_from_url
 
 import os
+from simplewiki.settings import WIKI_ALLOW_ANON_ATTACHMENTS
 
 
 def add_attachment(request, wiki_url):
@@ -21,7 +22,7 @@ def add_attachment(request, wiki_url):
     if perm_err:
         return perm_err
     
-    if not WIKI_ALLOW_ATTACHMENTS:
+    if not WIKI_ALLOW_ATTACHMENTS or (not WIKI_ALLOW_ANON_ATTACHMENTS and request.user.is_anonymous()):
         return HttpResponseForbidden()
 
     if request.method == 'POST':

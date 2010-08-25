@@ -104,6 +104,9 @@ class Article(models.Model):
         """Check write permissions and locked status"""
         return not self.locked and self.can_write(user)
 
+    def can_attach(self, user):
+        return self.can_write_l(user) and (WIKI_ALLOW_ANON_ATTACHMENTS or not user.is_anonymous())
+
     def __unicode__(self):
         if self.slug == '' and not self.parent:
             return unicode(_('Root article'))

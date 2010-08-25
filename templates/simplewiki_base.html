@@ -158,13 +158,13 @@
         	{% if wiki_article.attachments %}
         	<ul>
         		{% for a in wiki_article.attachments %}
-        		<li><a href="{{a.download_url}}">{{a.filename}}</a> ({{a.get_size|filesizeformat}})</li>
+        		<li><a href="{{a.download_url}}">{{a.filename|slice:":13"|slice:":-3" }}{% if a.filename|slice:"10:" %}...{{ a.filename|slice:"-3:" }}</a> ({{a.get_size|filesizeformat}})</li>
         		{% endfor %}
         	</ul>
         	{% else %}
         	<p><i>({% trans "none" %})</i></p>
         	{% endif %}
-        {% if wiki_write %}
+        {% if wiki_attachments_write %}
         	<form method="POST" action="{% url add_attachment wiki_article.get_url %}" enctype="multipart/form-data" target="wiki_attach_frame">
         		<input type="file" class="fileinput" name="attachment" size="10" /><br />
         		<input type="checkbox" name="overwrite" id="wiki_attach_overwrite" value="1" /> Overwrite same filename
