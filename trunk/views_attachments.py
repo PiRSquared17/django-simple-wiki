@@ -60,7 +60,6 @@ def add_attachment(request, wiki_url):
                 return attachment.file.name.split('.')[-2]
             if WIKI_ATTACHMENTS_ALLOWED_EXTENSIONS and not \
                get_extension(attachment.file.name) in WIKI_ATTACHMENTS_ALLOWED_EXTENSIONS:
-                print get_extension(attachment.file.name)
                 c = Context({'extension_err' : True,
                              'extensions': WIKI_ATTACHMENTS_ALLOWED_EXTENSIONS,
                              'wiki_article': article,
@@ -74,7 +73,6 @@ def add_attachment(request, wiki_url):
             # automatically deletes files
             for a in article.attachments():
                 if file_rel_path == a.file.name:
-#                    print file_rel_path
                     a.delete()
             def receive_file():
                 destination = open(file_path, 'wb+')
