@@ -88,7 +88,7 @@ class Article(models.Model):
         """ Check read permissions and return True/False."""
         if self.permissions:
             perms = self.permissions.can_read.all()
-            return perms.count() == 0 or perms.filter(read__exact = user.id).count() > 0
+            return perms.count() == 0 or (user in perms)
         else:
             return self.parent.can_read(user) if self.parent else True
 
@@ -96,7 +96,7 @@ class Article(models.Model):
         """ Check write permissions and return True/False."""
         if self.permissions:
             perms = self.permissions.can_write.all()
-            return perms.count() == 0 or perms.filter(write__exact = user.id).count() > 0
+            return perms.count() == 0 or (user in perms)
         else:
             return self.parent.can_write(user) if self.parent else True
 
