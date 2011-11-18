@@ -4,7 +4,7 @@
     {{ wiki_article.title }}
 {% endblock %}
 {% block wiki_body %}
-<form method="POST">
+<form method="POST">{% csrf_token %}
 <table id="wiki_history_table">
     <thead>
         <tr>
