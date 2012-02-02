@@ -1,3 +1,6 @@
+import mimetypes
+
+from django.utils.http import http_date, parse_http_date
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, Http404
 from django.template import loader, Context
 from django.db.models.fields.files import FieldFile
@@ -99,17 +102,18 @@ def add_attachment(request, wiki_url):
 
     return HttpResponse('')
 
-# Taken from http://www.djangosnippets.org/snippets/365/
+# Inspired by django.views.serve
 def send_file(request, filepath):
-    """                                                                         
-    Send a file through Django without loading the whole file into              
-    memory at once. The FileWrapper will turn the file object into an           
-    iterator for chunks of 8KB.                                                 
-    """
-    filename =  filepath
-    wrapper = FileWrapper(file(filename))
-    response = HttpResponse(wrapper, content_type='text/plain')
-    response['Content-Length'] = os.path.getsize(filename)
+    fullpath =  filepath
+    # Respect the If-Modified-Since header.
+    statobj = os.stat(fullpath)
+    mimetype, encoding = mimetypes.guess_type(fullpath)
+    mimetype = mimetype or 'application/octet-stream'
+    response = HttpResponse(open(fullpath, 'rb').read(), mimetype=mimetype)
+    response["Last-Modified"] = http_date(statobj.st_mtime)
+    response["Content-Length"] = statobj.st_size
+    if encoding:
+        response["Content-Encoding"] = encoding
     return response
 
 def view_attachment(request, wiki_url, file_name):
