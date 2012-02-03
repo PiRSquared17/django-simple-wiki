@@ -107,7 +107,7 @@ def send_file(request, filepath):
     fullpath =  filepath
     # Respect the If-Modified-Since header.
     statobj = os.stat(fullpath)
-    mimetype, encoding = mimetypes.guess_type(fullpath)
+    mimetype, encoding = mimetypes.guess_type(fullpath.replace(".upload", ""))
     mimetype = mimetype or 'application/octet-stream'
     response = HttpResponse(open(fullpath, 'rb').read(), mimetype=mimetype)
     response["Last-Modified"] = http_date(statobj.st_mtime)
