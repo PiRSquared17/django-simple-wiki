@@ -103,7 +103,8 @@ def create(request, wiki_url):
                 new_revision.revision_user = request.user
             new_revision.article = article
             new_revision.save()
-            import django.db as db
+            article.current_revision = new_revision
+            article.save()
             return HttpResponseRedirect(reverse('wiki_view', args=(article.get_url(),)))
     else:
         f = CreateArticleForm(initial={'title':request.GET.get('wiki_article_name', url_path[-1]),
